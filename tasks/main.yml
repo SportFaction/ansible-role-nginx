@@ -1,0 +1,42 @@
+---
+- name: Define nginx_user.
+  set_fact:
+    nginx_user: "{{ __nginx_user }}"
+  when: nginx_user is not defined
+
+# Setup/install tasks.
+
+
+- name: "Add NGINX Signing Key"
+  apt_key:
+    url: http://nginx.org/keys/nginx_signing.key
+
+- name: "Add NGINX Repository"
+  apt_repository:
+    repo: "{{item}}"
+  with_items:
+    - deb http://nginx.org/packages/mainline/{{ansible_distribution|lower}}/ {{ansible_distribution_release}} nginx
+    - deb-src http://nginx.org/packages/mainline/{{ansible_distribution|lower}}/ {{ansible_distribution_release}} nginx
+
+- name: "Install"
+  package:
+    name: nginx
+    state: latest
+  notify: "start nginx"
+
+# Vhost configuration.
+- include: vhosts.yml
+
+# Nginx setup.
+- name: Copy nginx configuration in place.
+  template:
+    src: "{{ nginx_conf_template }}"
+    dest: "{{ nginx_conf_file_path }}"
+    owner: root
+    group: "{{ root_group }}"
+    mode: 0644
+  notify:
+    - reload nginx
+
+- name: Ensure nginx is started and enabled to start at boot.
+  service: name=nginx state=started enabled=yes
