@@ -38,5 +38,21 @@
   notify:
     - reload nginx
 
+- apt: "name={{ item }} state=installed"
+  with_items:
+    - python-passlib
+  when: htpasswd_username is defined and htpasswd_password is defined
+
+- name: Create global htpasswd file
+  htpasswd:
+    path: /etc/nginx/htpasswd.users
+    name: "{{ htpasswd_username }}"
+    password: "{{ htpasswd_password }}"
+  when: htpasswd_username is defined and htpasswd_password is defined
+  notify:
+  - reload nginx
+
 - name: Ensure nginx is started and enabled to start at boot.
   service: name=nginx state=started enabled=yes
+
+
