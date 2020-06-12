@@ -38,9 +38,9 @@
   notify:
     - reload nginx
 
-- apt: "name={{ item }} state=installed"
-  with_items:
-    - python-passlib
+- name: Install the package "foo"
+  apt:
+    name: python-passlib
   when: htpasswd_username is defined and htpasswd_password is defined
 
 - name: Create global htpasswd file
